@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import unidecode
 import banco as bd
 import pegaCoordenadas as PC
+import classePin as cp
+
 
 def raspagem(link):
     materia = []
@@ -78,7 +80,7 @@ def formataCidade(cidade):
     cidade = cidade[0].lower()
     cidade = unidecode.unidecode(cidade)
     cidade = cidade.replace(' ','-')
-    cidade='https://latitudelongitude.org/br/{}/'.format((cidade))
+    cidade='https://latitudelongitude.org/br/{}/'.format(str(cidade))
     return cidade
 
 def formataModalidade(modalidade):
@@ -112,44 +114,75 @@ def formataModalidade(modalidade):
     else:
         return 'NI'
 
-def calculadora(notaLinguagem,notaHumanas,notaRedacao,notaMatematica,notaExatas,universidade,curso):
-    pesosLinguagem,pesoHumanas,pesoRedacao,pesoMatematica,pesoExatas = trataPesos(bd.buscaPesos(universidade,curso))
+def calculadora(notaLinguagem,notaHumanas,notaRedacao,notaMatematica,notaExatas,idUniversidade,curso):
+    lista = bd.buscaPesos(idUniversidade,curso)
+    pesosLinguagem,pesoHumanas,pesoRedacao,pesoMatematica,pesoExatas = trataPesos(lista)
     notaFinal = (notaLinguagem*pesosLinguagem) + (notaHumanas*pesoHumanas) + (notaRedacao*pesoRedacao) + (notaMatematica*pesoMatematica) + (notaExatas*pesoExatas)
     notaFinal = notaFinal / (pesosLinguagem + pesoHumanas + pesoRedacao + pesoMatematica + pesoExatas)
     return notaFinal
 
 def trataPesos(pesos):
     for peso in pesos:
-        if peso[3] == "Linguagens, Códigos e suas Tecnologias":
-            pesoLinguagem = float(peso[4])
-        elif peso[3] == "Matemática e suas Tecnologias" :
-            pesoMatematica = float(peso[4])
-        elif peso[3] == "Ciências Humanas e suas Tecnologias" :
-            pesoHumanas = float(peso[4])
-        elif peso[3] == "Ciências da Natureza e suas Tecnologias" :
-            pesoExatas = float(peso[4])
-        elif peso[3] == "Prova de Redação" :
-            pesoRedacao = float(peso[4])
+        if peso[4] == "Linguagens, Códigos e suas Tecnologias":
+            pesoLinguagem = float(peso[5])
+        elif peso[4] == "Matemática e suas Tecnologias" :
+            pesoMatematica = float(peso[5])
+        elif peso[4] == "Ciências Humanas e suas Tecnologias" :
+            pesoHumanas = float(peso[5])
+        elif peso[4] == "Ciências da Natureza e suas Tecnologias" :
+            pesoExatas = float(peso[5])
+        elif peso[4] == "Prova de Redação" :
+            pesoRedacao = float(peso[5])
     return pesoLinguagem,pesoHumanas,pesoRedacao,pesoMatematica,pesoExatas
 
 def adicionaCoordenadas():
-    universidades=bd.buscaUniversidade()
-    for universidade in universidades:
-        cidade=formataCidade(universidade[1])
+    cidades=bd.buscaUniversidade()
+    for cidade in cidades:
+        cidade=formataCidade(cidade[1])
         coordenada=PC.pegaCoordenadas(cidade)
-        bd.adicionaCoordenada(coordenada,universidade[0],universidade[1],universidade[2])
+        print(bd.adicionaCoordenada(coordenada,cidade[0],cidade[1],cidade[2]))
     return
 
-def adicionaMcota():
-    listas=bd.buscaNotas()
-    for lista in listas:
-        cotaFormatada = formataModalidade(lista[4])
-        bd.adicionaMcota(cotaFormatada,lista[0])
-    return
-
-
-
-
-
-
-
+def comparaNotas(notaLinguagem,notaHumanas,notaRedacao,notaMatematica,notaExatas,curso,ano,Mcota):
+    local=[]
+    texto=[]
+    corTexto=[]
+    notas=bd.buscaNotasCurso(curso,ano,Mcota)
+    for nota in notas:
+        notaCorte = nota[7]
+        idUniversidade = nota[1]
+        notaUsuario = calculadora(notaLinguagem,notaHumanas,notaRedacao,notaMatematica,notaExatas,idUniversidade,curso)
+        nome=nota[2]
+        if notaUsuario >= notaCorte:
+            #aprovado
+            cor = "green"
+            situacao = 'aprovado'
+        else:
+            #reprovado
+            cor = "red"
+            situacao = 'reprovado'
+        if len(local) == 0:
+            local.append(bd.buscaCoordenadasUniversidade(idUniversidade))
+            texto.append('''<p style = "color : {}">{} : {}</p>
+            <p style = "color : {}">sua nota:{}</p>
+            <p style = "color : {}">nota de corte:{}</p>'''.format(cor,nome,situacao,cor,notaUsuario,cor,notaCorte))
+            corTexto.append(cor)
+        else:
+            i=0
+            while i<len(local):
+                if local[i] == bd.buscaCoordenadasUniversidade(idUniversidade):
+                    texto[i]=texto[i] + '''<p style = "color : {}">{} : {}</p>
+                    <p style = "color : {}">sua nota:{}</p>
+                    <p style = "color : {}">nota de corte:{}</p>'''.format(cor,nome,situacao,cor,notaUsuario,cor,notaCorte)
+                    if corTexto[i]==cor:
+                        pass
+                    else:
+                        corTexto[i]='purple'
+                else:
+                    local.append(bd.buscaCoordenadasUniversidade(idUniversidade))
+                    texto.append('''<p style = "color : {}">{} : {}</p>
+                    <p style = "color : {}">sua nota:{}</p>
+                    <p style = "color : {}">nota de corte:{}</p>'''.format(cor,nome,situacao,cor,notaUsuario,cor,notaCorte))
+                    corTexto.append(cor)
+                i=i+1
+    return local,texto,corTexto

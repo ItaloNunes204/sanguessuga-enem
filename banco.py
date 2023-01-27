@@ -20,7 +20,7 @@ def curso(nome):
     return saida
 
 def universidade(nome,cidade,campus):
-    retorno=verificadorUnivercidade(nome,campus)
+    retorno=verificadorUniversidade(nome,campus,cidade)
     if retorno != "ja cadastrado":
         comando = """ INSERT INTO enem.universidade(nome,cidade,campus)
                        VALUE (\'{}\',\'{}\',\'{}\')""".format(nome,cidade,campus)
@@ -34,9 +34,9 @@ def universidade(nome,cidade,campus):
         saida='ja cadastrado'
     return saida
 
-def peso(univercidade,curso,modalidade,nota):
-    comando = """ INSERT INTO enem.pesos(univercidade,curso,modalidade,notaCorte)
-                   VALUE ({} , {}, \'{}\' , \'{}\' )""".format(univercidade,curso,modalidade,str(nota))
+def peso(universidade,curso,modalidade,nota,idUniversidade):
+    comando = """ INSERT INTO enem.pesos(universidade,curso,modalidade,nota,idUniversidade)
+                   VALUE (\'{}\' , \'{}\', \'{}\' , \'{}\',\'{}\' )""".format(universidade,curso,modalidade,str(nota),str(idUniversidade))
     try:
         cursor.execute(comando)
         con.commit()
@@ -45,9 +45,9 @@ def peso(univercidade,curso,modalidade,nota):
         saida = 'erro na nota de corte'
     return saida
 
-def notas(univercidade,curso,ano,modalidade,nota):
-    comando = """ INSERT INTO enem.notas(univercidade,curso,ano,modalidade,nota)
-                      VALUE (\'{}\',\'{}\',\'{}\',\'{}\',{})""".format(univercidade,curso,ano,modalidade,nota)
+def notas(universidade,curso,ano,modalidade,nota,idUniversidade,Mcota):
+    comando = """ INSERT INTO enem.notas(universidade,curso,ano,modalidade,nota,idUniversidade,Mcota)
+                      VALUE (\'{}\',\'{}\',\'{}\',\'{}\',{},\'{}\',\'{}\')""".format(universidade,curso,ano,modalidade,float(nota),str(idUniversidade),str(Mcota))
     try:
         cursor.execute(comando)
         con.commit()
@@ -56,8 +56,8 @@ def notas(univercidade,curso,ano,modalidade,nota):
         saida = 'erro na nota'
     return saida
 
-def verificadorUnivercidade(nome,campus,cidade):
-    comando = "select*from enem.univercidade where nome=\'{}\' and campus = \'{}\' and cidade = \'{}\'".format(nome,campus,cidade)
+def verificadorUniversidade(nome,campus,cidade):
+    comando = "select*from enem.universidade where nome=\'{}\' and campus = \'{}\' and cidade = \'{}\'".format(nome,campus,cidade)
     try:
         cursor.execute(comando)
         linhas = cursor.fetchall()
@@ -69,8 +69,21 @@ def verificadorUnivercidade(nome,campus,cidade):
         saida = 'erro na busca'
     return saida
 
-def buscaPesos(universidade,curso):
-    comando = "select*from enem.pesos where universidade=\'{}\' and curso = \'{}\'".format(universidade,curso)
+def pegaIdUniversidade(nome,campus,cidade):
+    comando = "select*from enem.universidade where nome = \'{}\' and campus = \'{}\' and cidade = \'{}\'".format(nome,campus,cidade)
+    try:
+        cursor.execute(comando)
+        linhas = cursor.fetchall()
+        if len(linhas) == 0:
+            saida = 'curso não encontrado'
+        else:
+            saida = linhas[0][3]
+    except Error as e:
+        saida = 'erro na busca'
+    return saida
+
+def buscaPesos(idUniversidade,curso):
+    comando = "select*from enem.pesos where idUniversidade = \'{}\' and curso = \'{}\'".format(idUniversidade,curso)
     try:
         cursor.execute(comando)
         linhas = cursor.fetchall()
@@ -87,9 +100,9 @@ def adicionaCoordenada(coordenada,nome,cidade,campus):
     try:
         cursor.execute(comando)
         con.commit()
-        saida = True
+        saida = 'coordenadas adicionadas'
     except Error as e:
-        saida = False
+        saida = 'erro ao adicionar coordenadas'
     return saida
 
 def buscaUniversidade():
@@ -101,6 +114,19 @@ def buscaUniversidade():
             saida = 'universidade não encontrado'
         else:
             saida = linhas
+    except Error as e:
+        saida = 'erro na busca'
+    return saida
+
+def buscaUniversidadeId(idUniversidade):
+    comando = "select*from enem.universidade where id = \'{}\' ".format(idUniversidade)
+    try:
+        cursor.execute(comando)
+        linhas = cursor.fetchall()
+        if len(linhas) == 0:
+            saida = 'universidade não encontrado'
+        else:
+            saida = linhas[0][4]
     except Error as e:
         saida = 'erro na busca'
     return saida
@@ -118,17 +144,46 @@ def buscaNotas():
         saida = 'erro na busca'
     return saida
 
-def adicionaMcota(Mcota,id):
-    comando = " UPDATE enem.universidade set Mcota = \'{}\' where id = \'{}\'".format(Mcota,id)
+def buscaNotasCurso(curso,ano,Mcota):
+    comando = "select*from enem.notas where curso = \'{}\' and ano=\'{}\' and Mcota=\'{}\'".format(curso,ano,Mcota)
     try:
         cursor.execute(comando)
-        con.commit()
-        saida = True
+        linhas = cursor.fetchall()
+        if len(linhas) == 0:
+            saida = 'nota não encontrado'
+        else:
+            saida = linhas
     except Error as e:
-        saida = False
+        saida = 'erro na busca'
     return saida
 
+def buscaNotasCorte(universidade,curso,ano,Mcota):
+    comando = "select*from enem.notas where curso = \'{}\' and ano=\'{}\' and univesidade = \'{}\ and Mcota = \'{}\''".format(curso, ano,universidade,Mcota)
+    try:
+        cursor.execute(comando)
+        linhas = cursor.fetchall()
+        if len(linhas) == 0:
+            saida = 'nota não encontrado'
+        else:
+            saida = linhas
+    except Error as e:
+        saida = 'erro na busca'
+    return saida
 
-
+def buscaCoordenadasUniversidade(id):
+    coordenadas=[]
+    comando = "select coordenadas from enem.universidade where id={}".format(id)
+    try:
+        cursor.execute(comando)
+        linhas = cursor.fetchall()
+        if len(linhas) == 0:
+            saida = 'universidade não encontrado'
+        else:
+            for linha in linhas:
+                coordenadas.append(linha[0])
+            saida = coordenadas
+    except Error as e:
+        saida = 'erro na busca'
+    return saida
 
 

@@ -46,28 +46,26 @@ def raspagem(entrada):
             print("campus: " + str(campus[i]))
             print("cidade/estado: " + str(cidade[i]))
             print(bd.universidade(nomes[i],cidade[i],campus[i]))
+            idUniversidade=bd.pegaIdUniversidade(nomes[i],campus[i],cidade[i])
             nomeUniversidade=nomes[i]
             i = i + 1
-            time.sleep(1)
             print("------------pesos----------")
             while (contadorMateria < len(materias)):
                 print(str(materias[contadorMateria]) + "--------" + str(pesos[contadorMateria]))
-                bd.peso(nomeUniversidade,curso,materias[contadorMateria],pesos[contadorMateria])
+                bd.peso(nomeUniversidade,curso,materias[contadorMateria],pesos[contadorMateria],idUniversidade)
                 contadorMateria = contadorMateria + 1
             contadorMateria = 0
 
             print("------------fim dos pesos----------")
-            time.sleep(1)
             print("------------notas----------")
             while (contadorNotas < len(modalidades)):
                 print("no ano de:" + str(anos[contadorNotas]))
                 print("a nota de corte na modalidade:" + str(modalidades[contadorNotas]) + "------" + str(notas[contadorNotas]))
                 Mcota = TS.formataModalidade(modalidades[contadorNotas])
-                bd.notas(nomeUniversidade,curso,anos[contadorNotas],modalidades[contadorNotas],float(notas[contadorNotas]),Mcota)
+                bd.notas(nomeUniversidade,curso,anos[contadorNotas],modalidades[contadorNotas],float(notas[contadorNotas]),idUniversidade,Mcota)
                 contadorNotas = contadorNotas + 1
             contadorNotas = 0
             print("------------fim da notas----------")
-            time.sleep(2)
             print("numero de univercidades raspadas: " + str(contadorUniversidade))
             print("numero de univercidades disponiveis: " + str(len(nomes)))
             contadorUniversidade = contadorUniversidade + 1
