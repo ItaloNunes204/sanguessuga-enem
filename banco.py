@@ -100,9 +100,9 @@ def adicionaCoordenada(coordenada,nome,cidade,campus):
     try:
         cursor.execute(comando)
         con.commit()
-        saida = 'coordenadas adicionadas'
+        saida = 'coordenadas adicionadas '+str(cidade)
     except Error as e:
-        saida = 'erro ao adicionar coordenadas'
+        saida = 'erro ao adicionar coordenadas '+str(cidade)
     return saida
 
 def buscaUniversidade():
@@ -124,7 +124,7 @@ def buscaUniversidadeId(idUniversidade):
         cursor.execute(comando)
         linhas = cursor.fetchall()
         if len(linhas) == 0:
-            saida = 'universidade não encontrado'
+            saida = 'universidade não encontrada'
         else:
             saida = linhas[0][4]
     except Error as e:
@@ -179,9 +179,7 @@ def buscaCoordenadasUniversidade(id):
         if len(linhas) == 0:
             saida = 'universidade não encontrado'
         else:
-            for linha in linhas:
-                coordenadas.append(linha[0])
-            saida = coordenadas
+            saida = linhas[0][0]
     except Error as e:
         saida = 'erro na busca'
     return saida
