@@ -2,15 +2,15 @@ import folium
 import formatacao
 import banco as bd
 import pegaCoordenadas as PC
-curso = 'medicina'
+curso = 'Medicina'
 cota = 'L5'
-notaLinguagem = '1000'
-notaHumanas = '1000'
-notaRedacao = '1000'
-notaMatematica = '1000'
-notaExatas = '1000'
+notaLinguagem = '800'
+notaHumanas = '720'
+notaRedacao = '860'
+notaMatematica = '720'
+notaExatas = '680'
 cidadeUsuario='ouro branco mg'
-ano='2017_1-1'
+ano='2017'
 
 usuario=PC.pegaCoordenadas(cidadeUsuario)
 usuario=usuario.split(',')
@@ -40,8 +40,13 @@ for nota in notas:
         for local in locais:
             if coordenadasi == local:
                 folium.Marker(
-                    location=[float(coordenadas[0])+0.20,float(coordenadas[1])+0.20],
-                    popup='''<p style = "color : {}">sua nota:{} nota de corte {}</p>'''.format(cor,notaUsuario,notaCorte),
+                    location=[float(coordenadas[0])+0.020,float(coordenadas[1])+0.020],
+                    popup='''<p style = "color :{}">
+                    {}
+                    <br>
+                    sua nota:{} 
+                    <br>
+                    nota de corte {}</p>'''.format(cor,nota[2],notaUsuario,notaCorte),
                     icon=folium.Icon(color="{}".format(cor), icon="{}".format(icon)),
                 ).add_to(m)
                 saida=False
@@ -53,7 +58,12 @@ for nota in notas:
             locais.append(coordenadasi)
             folium.Marker(
                 location=[float(coordenadas[0]), float(coordenadas[1])],
-                popup='''<p style = "color : {}">sua nota:{} nota de corte {}</p>'''.format(cor, notaUsuario, notaCorte),
+                popup='''<p style = "color : {}">
+                {} 
+                <br>
+                sua nota:{}
+                <br> 
+                nota de corte {}</p>'''.format(cor,nota[2], notaUsuario, notaCorte),
                 icon=folium.Icon(color="{}".format(cor), icon="{}".format(icon)),
             ).add_to(m)
         else:

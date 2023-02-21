@@ -95,14 +95,14 @@ def buscaPesos(idUniversidade,curso):
         saida = 'erro na busca'
     return saida
 
-def adicionaCoordenada(coordenada,nome,cidade,campus):
-    comando = " UPDATE enem.universidade set coordenadas = \'{}\' where nome = \"{}\" and cidade = \'{}\' and campus = \'{}\'".format(coordenada,nome,cidade,campus)
+def adicionaCoordenada(coordenada,id):
+    comando = " UPDATE enem.universidade set coordenadas = \'{}\' where id = \'{}\'".format(coordenada,id)
     try:
         cursor.execute(comando)
         con.commit()
-        saida = 'coordenadas adicionadas '+str(cidade)
+        saida = 'coordenadas adicionadas'
     except Error as e:
-        saida = 'erro ao adicionar coordenadas '+str(cidade)
+        saida = 'erro ao adicionar coordenadas'
     return saida
 
 def buscaUniversidade():
@@ -171,7 +171,6 @@ def buscaNotasCorte(universidade,curso,ano,Mcota):
     return saida
 
 def buscaCoordenadasUniversidade(id):
-    coordenadas=[]
     comando = "select coordenadas from enem.universidade where id={}".format(id)
     try:
         cursor.execute(comando)
@@ -183,5 +182,3 @@ def buscaCoordenadasUniversidade(id):
     except Error as e:
         saida = 'erro na busca'
     return saida
-
-

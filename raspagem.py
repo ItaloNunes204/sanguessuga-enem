@@ -3,17 +3,21 @@ from bs4 import BeautifulSoup
 import formatacao
 import banco as bd
 
-def raspagem(entrada):
-    curso=str(entrada)
-    url=formatacao.formataCurso(curso)
-    url_busca='https://sisusimulator.com.br'
-
-    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
+def abreJanela(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
     resposta = requests.get('{}'.format(url), headers=headers)
-
     if resposta.status_code!=200:
         print("erro na busca")
         return False
+    else:
+        return resposta
+
+def raspagem(entrada):
+    url=formatacao.formataCurso(str(entrada))
+    resposta = abreJanela(url)
+    if resposta == False:
+        exit()
 
     sopao_macarronico = resposta.text
     sopa_bonita = BeautifulSoup(sopao_macarronico, 'html.parser')
@@ -25,6 +29,7 @@ def raspagem(entrada):
 
     div_tabelas = sopa_bonita.find_all('div',class_="col-sm-6 col-xs-12 result")
 
+    # -----------------------------pega informaçoes da universidade------------------------------------------
     for tabela in div_tabelas:
         ps=tabela.find_all('p')
         nomes.append(ps[0].text)
@@ -36,70 +41,49 @@ def raspagem(entrada):
     i=0
     contadorMateria=0
     contadorNotas=0
-    print("iniciando raspagem")
     contadorUniversidade=1
     for link in links:
-        busca=url_busca+str(link)
+        busca=formatacao.formataLink(link)
         try:
-            materias,pesos,anos,modalidades,notas=raspagemNotas(busca)
-            print("universidade: " + str(nomes[i]))
-            print("campus: " + str(campus[i]))
-            print("cidade/estado: " + str(cidade[i]))
+            # -----------------------------adiciona informaçoes da universidade------------------------------------------
             print(bd.universidade(nomes[i],cidade[i],campus[i]))
             idUniversidade=bd.pegaIdUniversidade(nomes[i],campus[i],cidade[i])
             nomeUniversidade=nomes[i]
             i = i + 1
-            print("------------pesos----------")
+
+            # -----------------------------pega dados das notas------------------------------------------
+            materias, pesos, anos, modalidades, notas = raspagemNotas(busca)
+            # -----------------------------adiciona informaçoes dos pesos------------------------------------------
             while (contadorMateria < len(materias)):
-                print(str(materias[contadorMateria]) + "--------" + str(pesos[contadorMateria]))
-                bd.peso(nomeUniversidade,curso,materias[contadorMateria],pesos[contadorMateria],idUniversidade)
+                bd.peso(nomeUniversidade,str(entrada),materias[contadorMateria],pesos[contadorMateria],idUniversidade)
                 contadorMateria = contadorMateria + 1
             contadorMateria = 0
-
-            print("------------fim dos pesos----------")
-            print("------------notas----------")
+            # -----------------------------adiciona informaçoes das notas------------------------------------------
             while (contadorNotas < len(modalidades)):
-                print("no ano de:" + str(anos[contadorNotas]))
-                print("a nota de corte na modalidade:" + str(modalidades[contadorNotas]) + "------" + str(notas[contadorNotas]))
                 Mcota = formatacao.formataModalidade(modalidades[contadorNotas])
-                bd.notas(nomeUniversidade,curso,anos[contadorNotas],modalidades[contadorNotas],float(notas[contadorNotas]),idUniversidade,Mcota)
+                bd.notas(nomeUniversidade,str(entrada),anos[contadorNotas],modalidades[contadorNotas],float(notas[contadorNotas]),idUniversidade,Mcota)
                 contadorNotas = contadorNotas + 1
             contadorNotas = 0
-            print("------------fim da notas----------")
-            print("numero de univercidades raspadas: " + str(contadorUniversidade))
-            print("numero de univercidades disponiveis: " + str(len(nomes)))
-            contadorUniversidade = contadorUniversidade + 1
-            print("-------------------------------------------")
-
         except:
             print("erro")
             print(busca)
-            print("-------------------------------------------")
-            print("numero de universidades raspadas: " + str(contadorUniversidade))
-            print("numero de universidades disponiveis: " + str(len(nomes)))
-            contadorUniversidade = contadorUniversidade + 1
-            print("-------------------------------------------")
     return True
 
 def raspagemNotas(link):
-    materia = []
-    peso = []
-    ano = []
-    modalidade = []
-    nota = []
 
-    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'}
-    resposta = requests.get('{}'.format(link),headers=headers)
-
-    if resposta.status_code != 200:
-        print("erro na busca")
+    resposta=abreJanela(link)
+    if resposta == False:
         exit()
-
     sopao_macarronico = resposta.text
     sopa_bonita = BeautifulSoup(sopao_macarronico, 'html.parser')
 
     tabela = sopa_bonita.find_all("table", class_="table table-hover")
 
+    materia = []
+    peso = []
+    ano = []
+    modalidade = []
+    nota = []
     # -----------------------------codigo duplicado-------------------------------------------
     if len(tabela)==5:
         tabela.remove(tabela[4])
@@ -128,7 +112,6 @@ def raspagemNotas(link):
     # --------------------Prova de Redação
     materia.append(saida[8].text)
     peso.append(saida[9].text)
-    # -----------------------------raspando materias e pesos-------------------------------------------
 
     # -----------------------------raspando notas e modalidades-------------------------------------------
     modalidadesNotas = tabela[1]

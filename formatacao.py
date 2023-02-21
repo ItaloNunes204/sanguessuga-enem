@@ -13,6 +13,11 @@ def formataCurso(curso):
     url="https://sisusimulator.com.br/curso/"+str(curso)
     return url
 
+def formataLink(link):
+    url = 'https://sisusimulator.com.br'
+    url=url+str(link)
+    return url
+
 def formataNome(nome):
     nome=nome.split('-')
     return nome[1]
@@ -79,10 +84,9 @@ def trataPesos(pesos):
 
 def adicionaCoordenadas():
     dados = bd.buscaUniversidade()
-    contador = 0
     for dado in dados:
         cidade = formataCidade(dado[1])
-        nome = formataNome(dado[0])
+        nome =formataNome(dado[0])
         saida = str(nome) + ' ' + str(cidade[0])
         coordenada = pegaCoordenadas.pegaCoordenadas(saida)
         if not coordenada:
@@ -93,5 +97,4 @@ def adicionaCoordenadas():
                     coordenada = pegaCoordenadas.pegaCoordenadas(cidade[0])
                     if not coordenada:
                         print(dado[0] + " " + saida)
-                        contador = contador + 1
-    print(contador)
+        bd.adicionaCoordenada(coordenada, dado[3])
